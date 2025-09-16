@@ -1,0 +1,114 @@
+### Project Overview
+- Spring Boot app to create, version, and serve dynamic mock APIs per user.
+- Supports JWT auth, CRUD for mock endpoints, and a wildcard router that serves responses from DB.
+
+### Key Libraries & Frameworks
+- Spring Boot 3.3 (web, security, validation, data-jpa, websocket)
+- PostgreSQL driver (runtime)
+- JJWT 0.11.5 (JWT tokens)
+- springdoc-openapi (Swagger UI)
+- HikariCP, Hibernate ORM
+
+### Features
+- Auth: Register/Login, JWT issuance and verification.
+- Mock management: Create, list, update-as-new-version, delete per user.
+- Dynamic router: Serves any path under `/mock/**` based on saved mocks.
+- Response controls: Status code, delay, JSON body.
+- Runtime overrides via headers: `X-Status-Override`, `X-Delay-Override`, `X-HTTP-Method-Override`.
+- Owner resolution via header `X-Mock-User` or current authenticated user.
+- Swagger UI for interactive docs.
+- WebSocket topic `/topic/mock-updates` for change notifications.
+
+### Codebase Structure
+- `com.vijay.mockserver`
+  - `auth`: `AuthController`, DTOs for login/register, issues JWT.
+  - `security`: JWT filter/service, `SecurityConfig` (stateless, permissive routing).
+  - `mock`: `MockEndpoint` (entity), repository/service, `MockEndpointController` (CRUD), `DynamicMockController` (`/mock/**`).
+  - `user`: `User` entity, `UserRepository`.
+  - `config`: `OpenApiConfig` (Swagger).
+  - `common`: `AuditingConfig`.
+  - `websocket`: `WebSocketConfig`.
+- Resources: `application.yml` (port 8088, datasource, JPA settings).
+- Docker: `Dockerfile`, `docker-compose.yml`.
+
+### How It Works
+- Auth flow:
+  - POST `/auth/register` → creates `User`, returns JWT.
+  - POST `/auth/login` → returns JWT.
+- Mock lifecycle:
+  - POST `/mock/endpoints` (Bearer token) with `{endpoint, method, responseJson, delayMs, statusCode}`.
+  - PUT `/mock/endpoints/{id}` creates a new version (immutable history).
+  - GET `/mock/endpoints` lists current user’s mocks.
+  - DELETE `/mock/endpoints/{id}` removes mock.
+- Serving mocks:
+  - Any request to `/mock/**`:
+    - Resolves owner: `X-Mock-User` header; else authenticated user.
+    - Finds latest mock for `(user, path, method)`.
+    - Applies optional overrides from headers and returns configured JSON.
+
+### Future Enhancements
+- Per-mock request matching on headers/query/body.
+- Dynamic templating (e.g., Handlebars/Mustache) for `responseJson`.
+- Import/export of mocks (JSON).
+- Role-based access control and rate-limiting.
+- Paging/filtering for mock listing; UI console.
+- Actuator endpoints for health/metrics (add dependency).
+- Seed demo data profiles.
+
+### Dependencies (from `pom.xml`)
+- spring-boot-starter: web, security, validation, data-jpa, websocket
+- org.postgresql: postgresql (runtime)
+- io.jsonwebtoken: jjwt-api/jjwt-impl/jjwt-jackson
+- com.fasterxml.jackson.core: jackson-databind
+- org.springdoc: springdoc-openapi-starter-webmvc-ui
+- Dev/test: devtools (runtime optional), starter-test (test)
+
+### Executing Commands
+
+- Build locally (Windows PowerShell):
+```powershell
+cd "C:\Users\vijay\OneDrive\Desktop\Dynamic_API_Mock_Server"
+mvn -DskipTests clean package spring-boot:repackage
+```
+
+- Run locally (uses `application.yml` Postgres at localhost):
+```powershell
+java -jar target\dynamic-api-mock-server-0.0.1-SNAPSHOT.jar
+```
+
+- Run with Docker Compose (app + Postgres in containers):
+```powershell
+mvn -DskipTests clean package spring-boot:repackage
+docker compose up --build -d
+docker compose ps
+docker compose logs -f app
+```
+
+- Swagger UI:
+```text
+http://localhost:8088/swagger-ui/index.html
+```
+
+- Use local host Postgres from container (optional; replace compose app env):
+```
+SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/dynamic_mock_db
+SPRING_DATASOURCE_USERNAME=vijay
+SPRING_DATASOURCE_PASSWORD=vijay123
+```
+
+- Quick test flow (PowerShell):
+```powershell
+$base="http://localhost:8088"
+$login=Invoke-RestMethod -Method Post -Uri "$base/auth/login" -ContentType "application/json" -Body '{"username":"demo","password":"demo123"}'
+$token=$login.token
+$headers=@{ Authorization = "Bearer $token" }
+$body='{"endpoint":"/greet","method":"GET","responseJson":"{\"message\":\"hello\"}","delayMs":0,"statusCode":200}'
+Invoke-RestMethod -Method Post -Uri "$base/mock/endpoints" -Headers $headers -ContentType "application/json" -Body $body
+Invoke-RestMethod -Method Get -Uri "$base/mock/greet" -Headers @{ "X-Mock-User"="demo" }
+```
+
+- Compose maintenance:
+```powershell
+docker compose logs --since=2m app
+docker compose down
+```

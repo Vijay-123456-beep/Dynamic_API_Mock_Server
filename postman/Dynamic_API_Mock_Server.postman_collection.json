@@ -1,0 +1,235 @@
+{
+  "info": {
+    "_postman_id": "d1f0a6f7-9e2a-41f0-9f0e-collection",
+    "name": "Dynamic API Mock Server",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for Dynamic API Mock Server: auth, mock management, and dynamic routes."
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"demo123\",\n  \"email\": \"demo@example.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login (sets token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let json = {};",
+                  "try { json = pm.response.json(); } catch(e) {}",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  pm.environment && pm.environment.set && pm.environment.set('token', json.token);",
+                  "}",
+                  "pm.test('Got token', function () { pm.expect(json.token).to.be.a('string'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"demo123\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Mock Management",
+      "item": [
+        {
+          "name": "Create Mock Endpoint",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/endpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "endpoints"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endpoint\": \"/greet\",\n  \"method\": \"GET\",\n  \"responseJson\": \"{\\\"message\\\":\\\"hello\\\"}\",\n  \"delayMs\": 0,\n  \"statusCode\": 200\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List My Mocks",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/endpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "endpoints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Mock (new version)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/endpoints/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "endpoints",
+                "{{id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responseJson\": \"{\\\"message\\\":\\\"hello v2\\\"}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Mock",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/endpoints/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "endpoints",
+                "{{id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dynamic Routes",
+      "item": [
+        {
+          "name": "Call GET /mock/greet",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Mock-User", "value": "{{username}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/greet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "greet"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Call POST /mock/order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Mock-User", "value": "{{username}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "order"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 42,\n  \"qty\": 1\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8088" },
+    { "key": "token", "value": "" },
+    { "key": "username", "value": "demo" },
+    { "key": "id", "value": "1" }
+  ]
+}
+
+

@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: mockdb
+      POSTGRES_USER: mockuser
+      POSTGRES_PASSWORD: mockpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mockdb
+      SPRING_DATASOURCE_USERNAME: mockuser
+      SPRING_DATASOURCE_PASSWORD: mockpass
+    ports:
+      - "8088:8088"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
