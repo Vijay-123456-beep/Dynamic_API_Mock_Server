@@ -9,6 +9,11 @@ public class MockEndpointResponse {
     private Integer delayMs;
     private Integer statusCode;
     private Integer version;
+    private String requestHeaders;
+    private String queryParameters;
+    private String requestBodyPattern;
+    private Integer priority;
+    private Boolean isActive;
 
     public Long getId() {
         return id;
@@ -64,5 +69,45 @@ public class MockEndpointResponse {
 
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public String getRequestHeaders() {
+        return requestHeaders;
+    }
+
+    public void setRequestHeaders(String requestHeaders) {
+        this.requestHeaders = requestHeaders;
+    }
+
+    public String getQueryParameters() {
+        return queryParameters;
+    }
+
+    public void setQueryParameters(String queryParameters) {
+        this.queryParameters = queryParameters;
+    }
+
+    public String getRequestBodyPattern() {
+        return requestBodyPattern;
+    }
+
+    public void setRequestBodyPattern(String requestBodyPattern) {
+        this.requestBodyPattern = requestBodyPattern;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

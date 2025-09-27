@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic API Mock Server Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 12px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-primary {
+            background: #cce7ff;
+            color: #004085;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            gap: 0.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding-right: 2.5rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .json-editor {
+            width: 100%;
+            height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.5rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-active {
+            background: #28a745;
+        }
+
+        .status-inactive {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Dynamic API Mock Server Console</h1>
+    </div>
+
+    <div class="container">
+        <!-- Filters and Search -->
+        <div class="card">
+            <div class="card-header">
+                Filters & Search
+            </div>
+            <div class="card-body">
+                <div class="filters">
+                    <div class="form-group">
+                        <label>Search</label>
+                        <div class="search-box">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search endpoints, methods, or responses...">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Method</label>
+                        <select id="methodFilter" class="form-control" aria-label="Filter by HTTP method">
+                            <option value="">All Methods</option>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="statusFilter" class="form-control" aria-label="Filter by status">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button id="applyFilters" class="btn">Apply Filters</button>
+                        <button id="clearFilters" class="btn btn-secondary">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mock Endpoints Table -->
+        <div class="card">
+            <div class="card-header">
+                Mock Endpoints
+                <button id="addMockBtn" class="btn" style="float: right;">+ Add Mock</button>
+            </div>
+            <div class="card-body">
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    Loading...
+                </div>
+                <div id="errorMessage" class="error" style="display: none;"></div>
+                <div id="successMessage" class="success" style="display: none;"></div>
+                
+                <table class="table" id="mocksTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Version</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mocksTableBody">
+                    </tbody>
+                </table>
+
+                <div id="pagination" class="pagination" style="display: none;">
+                    <button id="prevPage" class="btn btn-secondary">Previous</button>
+                    <span id="pageInfo"></span>
+                    <button id="nextPage" class="btn btn-secondary">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Mock Modal -->
+    <div id="mockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Mock Endpoint</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="mockForm">
+                    <div class="form-group">
+                        <label>Endpoint *</label>
+                        <input type="text" id="endpoint" class="form-control" placeholder="/api/users" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Method *</label>
+                        <select id="method" class="form-control" required>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Response JSON *</label>
+                        <textarea id="responseJson" class="json-editor" placeholder='{"message": "Hello World"}' required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Status Code</label>
+                        <input type="number" id="statusCode" class="form-control" value="200" min="100" max="599">
+                    </div>
+                    <div class="form-group">
+                        <label>Delay (ms)</label>
+                        <input type="number" id="delayMs" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <input type="number" id="priority" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="isActive" checked> Active
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Request Headers (JSON)</label>
+                        <textarea id="requestHeaders" class="json-editor" placeholder='{"Authorization": "Bearer.*"}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Query Parameters (JSON)</label>
+                        <textarea id="queryParameters" class="json-editor" placeholder='{"page": "\\d+"}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Request Body Pattern (JSON)</label>
+                        <textarea id="requestBodyPattern" class="json-editor" placeholder='{"userId": "\\d+"}'></textarea>
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="button" class="btn btn-secondary" id="cancelMock">Cancel</button>
+                        <button type="submit" class="btn">Save Mock</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPage = 0;
+        let pageSize = 10;
+        let currentFilters = {};
+        let mocks = [];
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const methodFilter = document.getElementById('methodFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        const mocksTable = document.getElementById('mocksTable');
+        const mocksTableBody = document.getElementById('mocksTableBody');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const pagination = document.getElementById('pagination');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const mockModal = document.getElementById('mockModal');
+        const mockForm = document.getElementById('mockForm');
+        const addMockBtn = document.getElementById('addMockBtn');
+
+        // Event listeners
+        searchInput.addEventListener('input', debounce(loadMocks, 500));
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        clearFiltersBtn.addEventListener('click', clearFilters);
+        prevPageBtn.addEventListener('click', () => changePage(-1));
+        nextPageBtn.addEventListener('click', () => changePage(1));
+        addMockBtn.addEventListener('click', () => openModal());
+        document.querySelector('.close').addEventListener('click', closeModal);
+        document.getElementById('cancelMock').addEventListener('click', closeModal);
+        mockForm.addEventListener('submit', saveMock);
+
+        // Initialize
+        loadMocks();
+
+        // Functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showLoading() {
+            loadingIndicator.style.display = 'block';
+            mocksTable.style.display = 'none';
+            pagination.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loadingIndicator.style.display = 'none';
+            mocksTable.style.display = 'table';
+            pagination.style.display = 'flex';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        async function loadMocks() {
+            showLoading();
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    size: pageSize,
+                    sortBy: 'id',
+                    sortDirection: 'desc',
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/mock/endpoints/filtered?${params}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load mocks');
+                }
+
+                const data = await response.json();
+                mocks = data.content;
+                renderMocks();
+                renderPagination(data);
+            } catch (error) {
+                showError('Failed to load mocks: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderMocks() {
+            mocksTableBody.innerHTML = '';
+            mocks.forEach(mock => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${mock.endpoint}</td>
+                    <td><span class="badge badge-primary">${mock.method}</span></td>
+                    <td>
+                        <span class="status-indicator ${mock.isActive ? 'status-active' : 'status-inactive'}"></span>
+                        <span class="badge ${mock.isActive ? 'badge-success' : 'badge-danger'}">
+                            ${mock.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>${mock.priority || 0}</td>
+                    <td>v${mock.version}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editMock(${mock.id})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMock(${mock.id})">Delete</button>
+                    </td>
+                `;
+                mocksTableBody.appendChild(row);
+            });
+        }
+
+        function renderPagination(data) {
+            pageInfo.textContent = `Page ${data.page + 1} of ${data.totalPages} (${data.totalElements} total)`;
+            prevPageBtn.disabled = data.first;
+            nextPageBtn.disabled = data.last;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            if (currentPage < 0) currentPage = 0;
+            loadMocks();
+        }
+
+        function applyFilters() {
+            currentFilters = {};
+            if (searchInput.value.trim()) {
+                currentFilters.q = searchInput.value.trim();
+            }
+            if (methodFilter.value) {
+                currentFilters.method = methodFilter.value;
+            }
+            if (statusFilter.value) {
+                currentFilters.isActive = statusFilter.value === 'true';
+            }
+            currentPage = 0;
+            loadMocks();
+        }
+
+        function clearFilters() {
+            searchInput.value = '';
+            methodFilter.value = '';
+            statusFilter.value = '';
+            currentFilters = {};
+            currentPage = 0;
+            loadMocks();
+        }
+
+        function openModal(mock = null) {
+            document.getElementById('modalTitle').textContent = mock ? 'Edit Mock Endpoint' : 'Add Mock Endpoint';
+            if (mock) {
+                document.getElementById('endpoint').value = mock.endpoint;
+                document.getElementById('method').value = mock.method;
+                document.getElementById('responseJson').value = mock.responseJson;
+                document.getElementById('statusCode').value = mock.statusCode;
+                document.getElementById('delayMs').value = mock.delayMs;
+                document.getElementById('priority').value = mock.priority || 0;
+                document.getElementById('isActive').checked = mock.isActive;
+                document.getElementById('requestHeaders').value = mock.requestHeaders || '';
+                document.getElementById('queryParameters').value = mock.queryParameters || '';
+                document.getElementById('requestBodyPattern').value = mock.requestBodyPattern || '';
+            } else {
+                mockForm.reset();
+            }
+            mockModal.style.display = 'block';
+        }
+
+        function closeModal() {
+            mockModal.style.display = 'none';
+            mockForm.reset();
+        }
+
+        async function saveMock(event) {
+            event.preventDefault();
+            const formData = new FormData(mockForm);
+            const mockData = {
+                endpoint: document.getElementById('endpoint').value,
+                method: document.getElementById('method').value,
+                responseJson: document.getElementById('responseJson').value,
+                statusCode: parseInt(document.getElementById('statusCode').value),
+                delayMs: parseInt(document.getElementById('delayMs').value),
+                priority: parseInt(document.getElementById('priority').value),
+                isActive: document.getElementById('isActive').checked,
+                requestHeaders: document.getElementById('requestHeaders').value || null,
+                queryParameters: document.getElementById('queryParameters').value || null,
+                requestBodyPattern: document.getElementById('requestBodyPattern').value || null
+            };
+
+            try {
+                const response = await fetch('/mock/endpoints', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mockData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save mock');
+                }
+
+                showSuccess('Mock endpoint saved successfully!');
+                closeModal();
+                loadMocks();
+            } catch (error) {
+                showError('Failed to save mock: ' + error.message);
+            }
+        }
+
+        async function deleteMock(id) {
+            if (!confirm('Are you sure you want to delete this mock endpoint?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/mock/endpoints/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete mock');
+                }
+
+                showSuccess('Mock endpoint deleted successfully!');
+                loadMocks();
+            } catch (error) {
+                showError('Failed to delete mock: ' + error.message);
+            }
+        }
+
+        function editMock(id) {
+            const mock = mocks.find(m => m.id === id);
+            if (mock) {
+                openModal(mock);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target === mockModal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

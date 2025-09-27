@@ -19,6 +19,13 @@ public class User {
     @Column(nullable = false, unique = true, length = 200)
     private String email;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
+    @Column(name = "rate_limit_per_minute")
+    private Integer rateLimitPerMinute = 100; // Default rate limit
+
     public Long getId() {
         return id;
     }
@@ -49,5 +56,25 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Integer getRateLimitPerMinute() {
+        return rateLimitPerMinute;
+    }
+
+    public void setRateLimitPerMinute(Integer rateLimitPerMinute) {
+        this.rateLimitPerMinute = rateLimitPerMinute;
+    }
+
+    public enum Role {
+        USER, ADMIN, SUPER_ADMIN
     }
 }

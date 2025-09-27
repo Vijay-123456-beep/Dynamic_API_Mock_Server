@@ -1,114 +1,127 @@
-### Project Overview
-- Spring Boot app to create, version, and serve dynamic mock APIs per user.
-- Supports JWT auth, CRUD for mock endpoints, and a wildcard router that serves responses from DB.
+###Project Overview
 
-### Key Libraries & Frameworks
-- Spring Boot 3.3 (web, security, validation, data-jpa, websocket)
-- PostgreSQL driver (runtime)
-- JJWT 0.11.5 (JWT tokens)
-- springdoc-openapi (Swagger UI)
-- HikariCP, Hibernate ORM
+Dynamic_API_Mock_Server is a full-stack application designed to provide a dynamic API mocking platform. 
+It allows users to create, manage, and test mock API endpoints, making it useful for frontend/backend 
+development, testing, and rapid prototyping without needing real backend services.
+
+
+###Key Libraries & Frameworks
+
+Backend (Java, Spring Boot)
+
+Spring Boot: Main framework for building RESTful APIs.
+Spring Security: Handles authentication and authorization.
+Spring WebSocket: Enables real-time communication.
+Spring Data JPA: For database interactions.
+Actuator: For monitoring and management.
+OpenAPI/Swagger: API documentation.
+Maven: Build and dependency management.
+
+Frontend (React, TypeScript)
+
+React: UI library for building the SPA.
+TypeScript: Type safety for frontend code.
+Vite: Fast build tool and dev server.
+React Query: Data fetching and caching.
+ESLint: Linting and code quality.
+Other: CSS modules, Vite plugins.
 
 ### Features
-- Auth: Register/Login, JWT issuance and verification.
-- Mock management: Create, list, update-as-new-version, delete per user.
-- Dynamic router: Serves any path under `/mock/**` based on saved mocks.
-- Response controls: Status code, delay, JSON body.
-- Runtime overrides via headers: `X-Status-Override`, `X-Delay-Override`, `X-HTTP-Method-Override`.
-- Owner resolution via header `X-Mock-User` or current authenticated user.
-- Swagger UI for interactive docs.
-- WebSocket topic `/topic/mock-updates` for change notifications.
+-User authentication (login/signup).
+-Dashboard for managing mock APIs.
+-Dynamic creation, editing, and deletion of mock endpoints.
+-Import/export of mock configurations.
+-API testing interface (API Tester).
+-Real-time updates via WebSocket.
+-Admin panel for user and mock management.
+-API documentation (Swagger/OpenAPI).
+-UI for managing mocks and users.
 
 ### Codebase Structure
-- `com.vijay.mockserver`
-  - `auth`: `AuthController`, DTOs for login/register, issues JWT.
-  - `security`: JWT filter/service, `SecurityConfig` (stateless, permissive routing).
-  - `mock`: `MockEndpoint` (entity), repository/service, `MockEndpointController` (CRUD), `DynamicMockController` (`/mock/**`).
-  - `user`: `User` entity, `UserRepository`.
-  - `config`: `OpenApiConfig` (Swagger).
-  - `common`: `AuditingConfig`.
-  - `websocket`: `WebSocketConfig`.
-- Resources: `application.yml` (port 8088, datasource, JPA settings).
-- Docker: `Dockerfile`, `docker-compose.yml`.
+/mock-ui/                # Frontend React app
+  /src/
+    /pages/              # Main UI pages (Dashboard, Login, Signup, etc.)
+    /lib/                # API utilities, auth, query client, routes
+    /assets/             # Static assets
+    App.tsx, main.tsx    # App entry points
+  package.json           # Frontend dependencies
+  vite.config.ts         # Vite config
+
+/src/main/java/com/vijay/mockserver/   # Backend Java code
+  /actuator/             # Monitoring endpoints
+  /admin/                # Admin controllers
+  /auth/                 # Auth logic (controllers, DTOs)
+  /common/               # Shared utilities (pagination, auditing)
+  /config/               # App configuration (OpenAPI, etc.)
+  /mock/                 # Mock endpoint logic (controllers, services, repo)
+  /security/             # Security config
+  /seed/                 # Data seeding
+  /ui/                   # UI-related backend logic
+  /user/                 # User management
+  /websocket/            # WebSocket support
+  DynamicApiMockServerApplication.java # Main entry point
+
+/src/main/resources/
+  application.yml        # Backend config
+  /templates/            # HTML templates
+
+/docker-compose.yml      # Docker orchestration
+/Dockerfile              # Backend Dockerfile
+/pom.xml                 # Maven config
+/README.md               # Project documentation
+/ENHANCEMENTS.md         # Planned improvements
 
 ### How It Works
-- Auth flow:
-  - POST `/auth/register` → creates `User`, returns JWT.
-  - POST `/auth/login` → returns JWT.
-- Mock lifecycle:
-  - POST `/mock/endpoints` (Bearer token) with `{endpoint, method, responseJson, delayMs, statusCode}`.
-  - PUT `/mock/endpoints/{id}` creates a new version (immutable history).
-  - GET `/mock/endpoints` lists current user’s mocks.
-  - DELETE `/mock/endpoints/{id}` removes mock.
-- Serving mocks:
-  - Any request to `/mock/**`:
-    - Resolves owner: `X-Mock-User` header; else authenticated user.
-    - Finds latest mock for `(user, path, method)`.
-    - Applies optional overrides from headers and returns configured JSON.
+1.Startup: Spring Boot app starts, initializes DB, configures security, and exposes REST endpoints.
+2.User Auth: Users sign up or log in via the frontend, which communicates with backend auth endpoints.
+3.Mock Management: Authenticated users can create, edit, or delete mock API endpoints via the UI. 
+  These are stored in the backend and served dynamically.
+4.API Testing: Users can test their mocks directly from the UI.
+5.Import/Export: Mocks can be imported/exported for sharing or backup.
+6.Real-Time Updates: WebSocket support allows live updates to the UI when mocks change.
+7.Admin Features: Admins can manage users and all mocks.
+8.Documentation: OpenAPI/Swagger provides interactive API docs.
 
 ### Future Enhancements
-- Per-mock request matching on headers/query/body.
-- Dynamic templating (e.g., Handlebars/Mustache) for `responseJson`.
-- Import/export of mocks (JSON).
-- Role-based access control and rate-limiting.
-- Paging/filtering for mock listing; UI console.
-- Actuator endpoints for health/metrics (add dependency).
-- Seed demo data profiles.
+-More advanced mock response logic (dynamic templating, delays, etc.)
+-Role-based access control improvements.
+-Enhanced API analytics and monitoring.
+-Better import/export formats.
+-UI/UX improvements.
+-Integration with external services or databases.
+-More robust test automation.
 
 ### Dependencies (from `pom.xml`)
-- spring-boot-starter: web, security, validation, data-jpa, websocket
-- org.postgresql: postgresql (runtime)
-- io.jsonwebtoken: jjwt-api/jjwt-impl/jjwt-jackson
-- com.fasterxml.jackson.core: jackson-databind
-- org.springdoc: springdoc-openapi-starter-webmvc-ui
-- Dev/test: devtools (runtime optional), starter-test (test)
+Backend (from pom.xml)
+-spring-boot-starter-web
+-spring-boot-starter-security
+-spring-boot-starter-data-jpa
+-spring-boot-starter-actuator
+-spring-boot-starter-websocket
+-springdoc-openapi-ui
+-H2 or other DB drivers
+
+Frontend (from package.json)
+-react, react-dom
+-typescript
+-@tanstack/react-query
+-vite
+-eslint, @types/*, etc.
 
 ### Executing Commands
 
-- Build locally (Windows PowerShell):
-```powershell
-cd "C:\Users\vijay\OneDrive\Desktop\Dynamic_API_Mock_Server"
-mvn -DskipTests clean package spring-boot:repackage
-```
+Typical commands for this project:
 
-- Run locally (uses `application.yml` Postgres at localhost):
-```powershell
-java -jar target\dynamic-api-mock-server-0.0.1-SNAPSHOT.jar
-```
+Backend
 
-- Run with Docker Compose (app + Postgres in containers):
-```powershell
-mvn -DskipTests clean package spring-boot:repackage
-docker compose up --build -d
-docker compose ps
-docker compose logs -f app
-```
+mvn clean install — Build the backend
+mvn spring-boot:run — Run the backend server
+docker build -t dynamic-api-mock-server . — Build Docker image
+docker-compose up — Start services via Docker Compose
 
-- Swagger UI:
-```text
-http://localhost:8088/swagger-ui/index.html
-```
+Frontend
 
-- Use local host Postgres from container (optional; replace compose app env):
-```
-SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/dynamic_mock_db
-SPRING_DATASOURCE_USERNAME=vijay
-SPRING_DATASOURCE_PASSWORD=vijay123
-```
-
-- Quick test flow (PowerShell):
-```powershell
-$base="http://localhost:8088"
-$login=Invoke-RestMethod -Method Post -Uri "$base/auth/login" -ContentType "application/json" -Body '{"username":"demo","password":"demo123"}'
-$token=$login.token
-$headers=@{ Authorization = "Bearer $token" }
-$body='{"endpoint":"/greet","method":"GET","responseJson":"{\"message\":\"hello\"}","delayMs":0,"statusCode":200}'
-Invoke-RestMethod -Method Post -Uri "$base/mock/endpoints" -Headers $headers -ContentType "application/json" -Body $body
-Invoke-RestMethod -Method Get -Uri "$base/mock/greet" -Headers @{ "X-Mock-User"="demo" }
-```
-
-- Compose maintenance:
-```powershell
-docker compose logs --since=2m app
-docker compose down
-```
+cd mock-ui
+npm install — Install frontend dependencies
+npm run dev — Start Vite dev server
+npm run build — Build production frontend

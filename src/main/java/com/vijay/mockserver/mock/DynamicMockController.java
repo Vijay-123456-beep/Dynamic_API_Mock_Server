@@ -25,11 +25,14 @@ public class DynamicMockController {
     private final MockEndpointService service;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final TemplatingService templatingService;
 
-    public DynamicMockController(MockEndpointService service, UserRepository userRepository, ObjectMapper objectMapper) {
+    public DynamicMockController(MockEndpointService service, UserRepository userRepository,
+            ObjectMapper objectMapper, TemplatingService templatingService) {
         this.service = service;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
+        this.templatingService = templatingService;
     }
 
     @RequestMapping(value = "/**", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -49,7 +52,7 @@ public class DynamicMockController {
                     .body("{\"error\":\"No user found for the given username or authentication\"}");
         }
         User owner = ownerOpt.get();
-        Optional<MockEndpoint> found = service.findLatestByUserAndPathAndMethod(owner, path, method);
+        Optional<MockEndpoint> found = service.findBestMatchForRequest(owner, path, method, request);
         if (found.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -71,10 +74,16 @@ public class DynamicMockController {
         }
         String responseBody = mock.getResponseJson();
 
+        // Process template if it contains Handlebars syntax
+        if (responseBody.contains("{{") && responseBody.contains("}}")) {
+            responseBody = templatingService.processTemplateWithRequest(responseBody, request);
+        }
+
         if (!isJson(responseBody)) {
             responseBody = objectMapper.writeValueAsString(objectMapper.readTree(new String(responseBody.getBytes(StandardCharsets.UTF_8))));
         }
 
+        // Metrics recording removed for simplicity
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(responseBody);

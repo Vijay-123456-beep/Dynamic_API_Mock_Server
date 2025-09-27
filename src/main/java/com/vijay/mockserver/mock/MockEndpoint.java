@@ -45,6 +45,21 @@ public class MockEndpoint {
     @Column(nullable = false)
     private Integer version = 1;
 
+    @Column(name = "request_headers", columnDefinition = "TEXT")
+    private String requestHeaders; // JSON string for header matching rules
+
+    @Column(name = "query_parameters", columnDefinition = "TEXT")
+    private String queryParameters; // JSON string for query parameter matching rules
+
+    @Column(name = "request_body_pattern", columnDefinition = "TEXT")
+    private String requestBodyPattern; // JSON string for body matching rules
+
+    @Column(name = "priority", nullable = false)
+    private Integer priority = 0; // Higher priority mocks are matched first
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true; // Enable/disable mock
+
     public Long getId() {
         return id;
     }
@@ -107,5 +122,45 @@ public class MockEndpoint {
 
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public String getRequestHeaders() {
+        return requestHeaders;
+    }
+
+    public void setRequestHeaders(String requestHeaders) {
+        this.requestHeaders = requestHeaders;
+    }
+
+    public String getQueryParameters() {
+        return queryParameters;
+    }
+
+    public void setQueryParameters(String queryParameters) {
+        this.queryParameters = queryParameters;
+    }
+
+    public String getRequestBodyPattern() {
+        return requestBodyPattern;
+    }
+
+    public void setRequestBodyPattern(String requestBodyPattern) {
+        this.requestBodyPattern = requestBodyPattern;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }
