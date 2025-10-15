@@ -1,0 +1,27 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: dynamic-mock-db
+    env: docker
+    plan: free
+    image:
+      url: postgres:16
+    envVars:
+      - key: POSTGRES_DB
+        value: mockdb
+      - key: POSTGRES_USER
+        value: mockuser
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1
+
+databases:
+  # Managed PostgreSQL (Alternative - Recommended)
+  - name: dynamic-mock-postgres
+    databaseName: mockdb
+    user: mockuser
+    plan: free
+    region: oregon

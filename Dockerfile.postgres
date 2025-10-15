@@ -1,0 +1,4 @@
+FROM postgres:16
+ENV POSTGRES_DB=mockdb
+ENV POSTGRES_USER=mockuser
+EXPOSE 5432

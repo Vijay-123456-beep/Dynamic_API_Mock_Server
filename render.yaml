@@ -1,0 +1,71 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: mockserver-db
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: mockdb
+      - key: POSTGRES_USER
+        value: mockuser
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1
+
+  # Spring Boot Backend
+  - type: web
+    name: mockserver-backend
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: mockserver-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: mockserver-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: mockserver-db
+          property: password
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: APP_JWT_SECRET
+        generateValue: true
+      - key: APP_CORS_ALLOWED_ORIGINS
+        sync: false
+    buildFilter:
+      paths:
+        - src/**
+        - pom.xml
+        - Dockerfile
+
+  # React Frontend
+  - type: web
+    name: mockserver-frontend
+    env: static
+    plan: free
+    region: oregon
+    buildCommand: cd mock-ui && npm install && npm run build
+    staticPublishPath: ./mock-ui/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: mockserver-backend
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
