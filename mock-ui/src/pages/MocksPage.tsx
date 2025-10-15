@@ -20,7 +20,7 @@ export default function MocksPage() {
   const { data, isLoading, refetch } = useQuery<Page<Mock>>({
     queryKey: ['mocks', { page, size, q }],
     queryFn: async () => (await api.get('/api/mocks', { params: { page, size, q } })).data,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   async function onExport() {
